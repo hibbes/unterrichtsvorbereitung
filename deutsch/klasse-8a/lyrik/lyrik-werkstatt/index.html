@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lyrik-Werkstatt – Klasse 8a</title>
+    <style>
+        :root {
+            --primary: #6C5CE7;
+            --primary-light: #a29bfe;
+            --accent: #00cec9;
+            --bg: #0a0a1a;
+            --card: #16162a;
+            --card-hover: #1e1e3a;
+            --text: #f0f0f0;
+            --text-muted: #a0a0b0;
+            --success: #00b894;
+            --error: #e17055;
+            --warning: #fdcb6e;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .app-header {
+            background: linear-gradient(135deg, var(--primary), #e84393);
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .app-header::before {
+            content: '✨📝🎤🎬';
+            position: absolute;
+            font-size: 3rem;
+            opacity: 0.15;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            letter-spacing: 2rem;
+        }
+
+        .app-header h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 0.3rem;
+        }
+
+        .app-header p { opacity: 0.9; font-size: 1rem; }
+
+        nav {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 1rem;
+            flex-wrap: wrap;
+            background: var(--card);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        nav button {
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 0.6rem 1.2rem;
+            border-radius: 2rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        nav button:hover, nav button.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            transform: translateY(-1px);
+        }
+
+        .section { display: none; padding: 1.5rem; max-width: 800px; margin: 0 auto; }
+        .section.active { display: block; }
+
+        .card {
+            background: var(--card);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: transform 0.2s;
+        }
+
+        .card:hover { transform: translateY(-2px); }
+
+        .card h2 {
+            color: var(--primary-light);
+            margin-bottom: 0.5rem;
+            font-size: 1.3rem;
+        }
+
+        .card h3 {
+            color: var(--accent);
+            margin: 1rem 0 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .card p, .card li { line-height: 1.7; color: var(--text-muted); }
+        .card ul { padding-left: 1.5rem; }
+        .card li { margin-bottom: 0.3rem; }
+
+        .example-box {
+            background: rgba(108, 92, 231, 0.1);
+            border-left: 3px solid var(--primary);
+            padding: 1rem;
+            margin: 0.8rem 0;
+            border-radius: 0 0.5rem 0.5rem 0;
+            font-style: italic;
+        }
+
+        /* Quiz Styles */
+        .quiz-question {
+            background: var(--card);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .quiz-question h3 {
+            color: var(--text);
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .quiz-question .q-number {
+            color: var(--primary-light);
+            font-size: 0.85rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .options { display: flex; flex-direction: column; gap: 0.5rem; }
+
+        .option {
+            background: rgba(255,255,255,0.03);
+            border: 2px solid rgba(255,255,255,0.08);
+            border-radius: 0.8rem;
+            padding: 0.9rem 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+        }
+
+        .option:hover { border-color: var(--primary); background: rgba(108, 92, 231, 0.1); }
+        .option.selected { border-color: var(--primary); background: rgba(108, 92, 231, 0.15); }
+        .option.correct { border-color: var(--success); background: rgba(0, 184, 148, 0.15); }
+        .option.wrong { border-color: var(--error); background: rgba(225, 112, 85, 0.15); }
+        .option.disabled { pointer-events: none; }
+
+        .explanation {
+            display: none;
+            margin-top: 0.8rem;
+            padding: 0.8rem;
+            border-radius: 0.5rem;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .explanation.show { display: block; }
+        .explanation.correct-exp { background: rgba(0, 184, 148, 0.1); color: var(--success); }
+        .explanation.wrong-exp { background: rgba(225, 112, 85, 0.1); color: var(--error); }
+
+        .score-bar {
+            background: var(--card);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .score-bar .score-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--primary-light);
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 4px;
+            margin-top: 0.8rem;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        /* Metrum Klopfer */
+        .metrum-display {
+            font-size: 1.8rem;
+            letter-spacing: 0.3rem;
+            text-align: center;
+            padding: 2rem;
+            font-family: 'Georgia', serif;
+            line-height: 2;
+        }
+
+        .syllable {
+            display: inline-block;
+            padding: 0.3rem 0.5rem;
+            margin: 0.2rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1.2rem;
+        }
+
+        .syllable:hover { background: rgba(108, 92, 231, 0.2); }
+        .syllable.stressed { background: var(--primary); color: white; font-weight: bold; }
+        .syllable.unstressed { background: rgba(0, 206, 201, 0.2); color: var(--accent); }
+
+        .btn {
+            background: linear-gradient(135deg, var(--primary), #e84393);
+            color: white;
+            border: none;
+            padding: 0.8rem 2rem;
+            border-radius: 2rem;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-block;
+            margin-top: 1rem;
+        }
+
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(108, 92, 231, 0.4); }
+        .btn-secondary { background: var(--card); border: 2px solid var(--primary); }
+
+        .tag {
+            display: inline-block;
+            background: rgba(108, 92, 231, 0.15);
+            color: var(--primary-light);
+            padding: 0.2rem 0.6rem;
+            border-radius: 1rem;
+            font-size: 0.8rem;
+            margin: 0.2rem;
+        }
+
+        /* Gedicht-Chat Simulator */
+        .chat-container {
+            max-width: 400px;
+            margin: 1rem auto;
+            background: #1a1a2e;
+            border-radius: 1.5rem;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .chat-header {
+            background: var(--primary);
+            padding: 1rem;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .chat-messages { padding: 1rem; min-height: 300px; }
+
+        .chat-msg {
+            max-width: 80%;
+            padding: 0.7rem 1rem;
+            border-radius: 1rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .chat-msg.left {
+            background: rgba(255,255,255,0.08);
+            border-bottom-left-radius: 0.3rem;
+            margin-right: auto;
+        }
+
+        .chat-msg.right {
+            background: var(--primary);
+            border-bottom-right-radius: 0.3rem;
+            margin-left: auto;
+        }
+
+        .chat-msg .sender {
+            font-size: 0.75rem;
+            opacity: 0.7;
+            margin-bottom: 0.2rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .app-header h1 { font-size: 1.5rem; }
+            nav button { padding: 0.5rem 0.8rem; font-size: 0.8rem; }
+            .section { padding: 1rem; }
+            .metrum-display { font-size: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-header">
+    <h1>Lyrik-Werkstatt</h1>
+    <p>Gedichte verstehen, erleben, gestalten – Klasse 8a</p>
+</div>
+
+<nav>
+    <button class="active" onclick="showSection('home')">🏠 Start</button>
+    <button onclick="showSection('begriffe')">📖 Begriffe</button>
+    <button onclick="showSection('stilmittel')">🔍 Stilmittel</button>
+    <button onclick="showSection('metrum')">🥁 Metrum-Klopfer</button>
+    <button onclick="showSection('quiz')">🎯 Quiz</button>
+    <button onclick="showSection('chat')">💬 Gedicht-Chat</button>
+</nav>
+
+<!-- HOME -->
+<div class="section active" id="home">
+    <div class="card">
+        <h2>Willkommen in der Lyrik-Werkstatt! 🎭</h2>
+        <p>Hier findest du interaktive Übungen rund um Gedichte. Nutze die Navigation oben, um zwischen den Bereichen zu wechseln.</p>
+        <h3>Was erwartet dich?</h3>
+        <ul>
+            <li><strong>📖 Begriffe</strong> – Alle wichtigen Fachbegriffe der Lyrik auf einen Blick</li>
+            <li><strong>🔍 Stilmittel-Detektiv</strong> – Erkenne sprachliche Bilder in Texten</li>
+            <li><strong>🥁 Metrum-Klopfer</strong> – Klicke den Rhythmus von Gedichten</li>
+            <li><strong>🎯 Quiz</strong> – Teste dein Wissen</li>
+            <li><strong>💬 Gedicht-Chat</strong> – Erlebe Gedichte als Chat-Nachrichten</li>
+        </ul>
+    </div>
+    <div class="card">
+        <h2>Tipp der Woche 💡</h2>
+        <p>Gedichte sind wie Musik: Es geht nicht nur darum, was gesagt wird, sondern <strong>wie</strong> es klingt. Lies Gedichte immer laut – du wirst überrascht sein, wie viel du dabei entdeckst!</p>
+    </div>
+</div>
+
+<!-- BEGRIFFE -->
+<div class="section" id="begriffe">
+    <div class="card">
+        <h2>📖 Grundbegriffe der Lyrik</h2>
+        <p>Diese Fachbegriffe brauchst du für die Gedichtanalyse:</p>
+    </div>
+
+    <div class="card">
+        <h3>Aufbau</h3>
+        <p><strong>Vers</strong> – Eine einzelne Zeile im Gedicht</p>
+        <div class="example-box">„Es war ein König in Thule" ← das ist ein Vers</div>
+
+        <p><strong>Strophe</strong> – Eine Gruppe von Versen (wie ein Absatz)</p>
+
+        <p><strong>Enjambement</strong> – Wenn ein Satz über das Versende hinausgeht</p>
+        <div class="example-box">„Und in den Seen bespiegeln / sich die Schlösser" ← der Satz läuft über den Zeilenumbruch hinweg</div>
+
+        <p><strong>Kadenz</strong> – Das Versende: <span class="tag">männlich</span> = betonte Endsilbe, <span class="tag">weiblich</span> = unbetonte Endsilbe</p>
+    </div>
+
+    <div class="card">
+        <h3>Reimschemata</h3>
+        <p><strong>Paarreim</strong> <span class="tag">aa bb</span></p>
+        <div class="example-box">Ein Jüngling liebt ein Mädchen, <strong>(a)</strong><br>die hat einen andern erwählt; <strong>(b)</strong><br>der andre liebt eine andre <strong>(c)</strong><br>und hat sich mit dieser vermählt. <strong>(b)</strong></div>
+
+        <p><strong>Kreuzreim</strong> <span class="tag">ab ab</span></p>
+        <div class="example-box">Es war, als hätt' der Himmel <strong>(a)</strong><br>die Erde still geküsst, <strong>(b)</strong><br>dass sie im Blütenschimmer <strong>(a)</strong><br>von ihm nun träumen müsst'. <strong>(b)</strong></div>
+
+        <p><strong>Umarmender Reim</strong> <span class="tag">abba</span></p>
+        <div class="example-box">Vers 1 reimt sich auf Vers 4, Vers 2 auf Vers 3 – der äußere Reim „umarmt" den inneren.</div>
+    </div>
+
+    <div class="card">
+        <h3>Metrum (Versmaß)</h3>
+        <p><strong>Jambus</strong> <span class="tag">x X</span> – unbetont-betont</p>
+        <div class="example-box">ge-DICHT, ver-STEHN, er-WACHT → „da-DUM da-DUM da-DUM"</div>
+
+        <p><strong>Trochäus</strong> <span class="tag">X x</span> – betont-unbetont</p>
+        <div class="example-box">HIM-mel, RE-gen, BLU-me → „DUM-da DUM-da DUM-da"</div>
+
+        <p><strong>Daktylus</strong> <span class="tag">X x x</span> – betont-unbetont-unbetont</p>
+        <div class="example-box">WAN-de-rer, KÖ-ni-gin → „DUM-da-da DUM-da-da"</div>
+
+        <p><strong>Anapäst</strong> <span class="tag">x x X</span> – unbetont-unbetont-betont</p>
+        <div class="example-box">Pa-ra-DIES, Ü-ber-MUT → „da-da-DUM da-da-DUM"</div>
+    </div>
+
+    <div class="card">
+        <h3>Lyrisches Ich</h3>
+        <p>Die Stimme, die im Gedicht spricht. <strong>Achtung:</strong> Das lyrische Ich ist NICHT automatisch der/die Autor:in!</p>
+        <div class="example-box">Wenn Erich Kästner schreibt „Ich bin so knallvergnügt erwacht" – dann spricht das lyrische Ich, nicht unbedingt Kästner selbst.</div>
+    </div>
+</div>
+
+<!-- STILMITTEL -->
+<div class="section" id="stilmittel">
+    <div class="card">
+        <h2>🔍 Stilmittel-Detektiv</h2>
+        <p>Finde die sprachlichen Bilder in den folgenden Textstellen!</p>
+    </div>
+
+    <div id="stilmittel-quiz"></div>
+
+    <div class="score-bar" id="stilmittel-score" style="display:none;">
+        <div class="score-number" id="stilmittel-score-number">0/0</div>
+        <p style="color: var(--text-muted);">richtig erkannt</p>
+        <div class="progress-bar"><div class="progress-fill" id="stilmittel-progress"></div></div>
+        <button class="btn" onclick="resetStilmittel()">🔄 Nochmal versuchen</button>
+    </div>
+</div>
+
+<!-- METRUM KLOPFER -->
+<div class="section" id="metrum">
+    <div class="card">
+        <h2>🥁 Metrum-Klopfer</h2>
+        <p>Klicke auf die <strong>betonten</strong> Silben! Lies den Vers laut vor und klopfe mit.</p>
+    </div>
+
+    <div class="card" id="metrum-exercise">
+        <div class="q-number" id="metrum-label">Vers 1 von 5</div>
+        <div class="metrum-display" id="metrum-display"></div>
+        <p style="text-align:center; color: var(--text-muted); margin-top:0.5rem;" id="metrum-hint"></p>
+        <div style="text-align:center;">
+            <button class="btn" onclick="checkMetrum()">✓ Überprüfen</button>
+            <button class="btn btn-secondary" onclick="nextMetrum()">→ Nächster Vers</button>
+        </div>
+        <div class="explanation" id="metrum-feedback"></div>
+    </div>
+</div>
+
+<!-- QUIZ -->
+<div class="section" id="quiz">
+    <div class="card">
+        <h2>🎯 Lyrik-Quiz</h2>
+        <p>Teste dein Wissen! Wähle jeweils die richtige Antwort.</p>
+    </div>
+
+    <div class="score-bar">
+        <div class="score-number" id="quiz-score">0/10</div>
+        <p style="color: var(--text-muted);">richtige Antworten</p>
+        <div class="progress-bar"><div class="progress-fill" id="quiz-progress" style="width:0%"></div></div>
+    </div>
+
+    <div id="quiz-container"></div>
+
+    <div style="text-align:center; margin: 2rem 0;">
+        <button class="btn" onclick="resetQuiz()">🔄 Quiz neu starten</button>
+    </div>
+</div>
+
+<!-- GEDICHT-CHAT -->
+<div class="section" id="chat">
+    <div class="card">
+        <h2>💬 Gedicht als Chat</h2>
+        <p>Was wäre, wenn die Figuren aus berühmten Gedichten chatten würden? Wähle ein Gedicht:</p>
+        <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:1rem;">
+            <button class="btn" onclick="startChat('erlkoenig')">🌙 Erlkönig</button>
+            <button class="btn btn-secondary" onclick="startChat('loreley')">🎵 Loreley</button>
+            <button class="btn btn-secondary" onclick="startChat('ribbeck')">🍐 Herr von Ribbeck</button>
+        </div>
+    </div>
+
+    <div class="chat-container" id="chat-box" style="display:none;">
+        <div class="chat-header" id="chat-title">Erlkönig – Gruppenchat</div>
+        <div class="chat-messages" id="chat-messages"></div>
+    </div>
+
+    <div class="card" id="chat-reflection" style="display:none;">
+        <h3>Zum Nachdenken 🤔</h3>
+        <p id="chat-reflection-text"></p>
+    </div>
+</div>
+
+<script>
+// ============== NAVIGATION ==============
+function showSection(id) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    event.target.classList.add('active');
+    window.scrollTo(0, 0);
+}
+
+// ============== STILMITTEL-DETEKTIV ==============
+const stilmittelData = [
+    { text: '„Die Zeit ist ein gieriger Hund, der seine Beute nicht loslässt."', answer: 'Metapher', options: ['Metapher', 'Vergleich', 'Personifikation', 'Alliteration'], explanation: 'Die Zeit wird direkt als „gieriger Hund" bezeichnet – ohne „wie". Das macht es zur Metapher.' },
+    { text: '„Ihr Lächeln war wie Sonnenschein an einem Regentag."', answer: 'Vergleich', options: ['Metapher', 'Vergleich', 'Personifikation', 'Hyperbel'], explanation: 'Das Wort „wie" verbindet zwei Dinge miteinander → Vergleich.' },
+    { text: '„Der Wind flüsterte leise durch die Blätter."', answer: 'Personifikation', options: ['Metapher', 'Vergleich', 'Personifikation', 'Onomatopoesie'], explanation: 'Der Wind kann nicht wirklich flüstern – er bekommt eine menschliche Eigenschaft: Personifikation.' },
+    { text: '„Milch macht müde Männer munter."', answer: 'Alliteration', options: ['Metapher', 'Alliteration', 'Personifikation', 'Anapher'], explanation: 'Mehrere Wörter beginnen mit dem gleichen Buchstaben „M" → Alliteration.' },
+    { text: '„Ich hab dir das schon tausendmal gesagt!"', answer: 'Hyperbel', options: ['Metapher', 'Vergleich', 'Hyperbel', 'Ironie'], explanation: 'Starke Übertreibung, die nicht wörtlich gemeint ist → Hyperbel.' },
+    { text: '„Wer nie sein Brot mit Tränen aß, / Wer nie die kummervollen Nächte..."', answer: 'Anapher', options: ['Alliteration', 'Anapher', 'Parallelismus', 'Metapher'], explanation: '„Wer nie" wird am Anfang aufeinanderfolgender Verse wiederholt → Anapher.' },
+    { text: '„Das Feuer der Leidenschaft brannte in seinen Augen."', answer: 'Metapher', options: ['Metapher', 'Vergleich', 'Hyperbel', 'Personifikation'], explanation: '„Feuer der Leidenschaft" – die Leidenschaft wird als Feuer dargestellt, ohne „wie" → Metapher.' },
+    { text: '„Die Blätter tanzten im Herbstwind über den Boden."', answer: 'Personifikation', options: ['Metapher', 'Vergleich', 'Personifikation', 'Alliteration'], explanation: 'Blätter können nicht tanzen – sie bekommen eine menschliche Handlung: Personifikation.' },
+];
+
+let stilmittelCorrect = 0, stilmittelTotal = 0;
+
+function initStilmittel() {
+    const container = document.getElementById('stilmittel-quiz');
+    container.innerHTML = '';
+    stilmittelCorrect = 0;
+    stilmittelTotal = 0;
+    document.getElementById('stilmittel-score').style.display = 'none';
+
+    stilmittelData.forEach((q, i) => {
+        const div = document.createElement('div');
+        div.className = 'quiz-question';
+        div.innerHTML = `
+            <div class="q-number">Textstelle ${i + 1} von ${stilmittelData.length}</div>
+            <h3>${q.text}</h3>
+            <div class="options">
+                ${q.options.map(o => `<div class="option" onclick="checkStilmittel(this, '${o}', '${q.answer}', ${i})">${o}</div>`).join('')}
+            </div>
+            <div class="explanation" id="stil-exp-${i}"></div>
+        `;
+        container.appendChild(div);
+    });
+}
+
+function checkStilmittel(el, selected, correct, index) {
+    const parent = el.closest('.quiz-question');
+    if (parent.classList.contains('answered')) return;
+    parent.classList.add('answered');
+    stilmittelTotal++;
+
+    const expEl = document.getElementById(`stil-exp-${index}`);
+    parent.querySelectorAll('.option').forEach(o => {
+        o.classList.add('disabled');
+        if (o.textContent === correct) o.classList.add('correct');
+    });
+
+    if (selected === correct) {
+        el.classList.add('correct');
+        stilmittelCorrect++;
+        expEl.className = 'explanation show correct-exp';
+        expEl.textContent = '✓ Richtig! ' + stilmittelData[index].explanation;
+    } else {
+        el.classList.add('wrong');
+        expEl.className = 'explanation show wrong-exp';
+        expEl.textContent = '✗ ' + stilmittelData[index].explanation;
+    }
+
+    if (stilmittelTotal === stilmittelData.length) {
+        const scoreEl = document.getElementById('stilmittel-score');
+        scoreEl.style.display = 'block';
+        document.getElementById('stilmittel-score-number').textContent = `${stilmittelCorrect}/${stilmittelTotal}`;
+        document.getElementById('stilmittel-progress').style.width = `${(stilmittelCorrect/stilmittelTotal)*100}%`;
+    }
+}
+
+function resetStilmittel() { initStilmittel(); }
+
+// ============== METRUM-KLOPFER ==============
+const metrumData = [
+    { verse: 'Es war ein Kö nig in Thu le', stressed: [0,0,1,0,1,0,0,1,0], metrum: 'Jambus (mit Auftakt)', hint: 'Tipp: da-DUM da-DUM da-DUM...' },
+    { verse: 'Fest ge mau ert in der Er den', stressed: [1,0,1,0,0,0,1,0], metrum: 'Trochäus', hint: 'Tipp: DUM-da DUM-da DUM-da...' },
+    { verse: 'Ü ber al len Gip feln ist Ruh', stressed: [1,0,1,0,1,0,0,1], metrum: 'Freier Rhythmus', hint: 'Tipp: Lies laut und klopfe mit!' },
+    { verse: 'Es schlug mein Herz ge schwind zu Pfer de', stressed: [0,1,0,1,0,1,0,1,0], metrum: 'Jambus', hint: 'Tipp: da-DUM da-DUM da-DUM da-DUM...' },
+    { verse: 'Wol ke und Son nen schein', stressed: [1,0,0,1,0,1], metrum: 'Daktylus', hint: 'Tipp: DUM-da-da DUM-da-da...' },
+];
+
+let currentMetrum = 0;
+
+function initMetrum() {
+    currentMetrum = 0;
+    showMetrum();
+}
+
+function showMetrum() {
+    const data = metrumData[currentMetrum];
+    const display = document.getElementById('metrum-display');
+    const syllables = data.verse.split(' ');
+    display.innerHTML = syllables.map((s, i) =>
+        `<span class="syllable" onclick="toggleSyllable(this)" data-index="${i}">${s}</span>`
+    ).join(' ');
+    document.getElementById('metrum-label').textContent = `Vers ${currentMetrum + 1} von ${metrumData.length}`;
+    document.getElementById('metrum-hint').textContent = data.hint;
+    document.getElementById('metrum-feedback').className = 'explanation';
+    document.getElementById('metrum-feedback').textContent = '';
+}
+
+function toggleSyllable(el) {
+    el.classList.toggle('stressed');
+    el.classList.toggle('unstressed', !el.classList.contains('stressed'));
+}
+
+function checkMetrum() {
+    const data = metrumData[currentMetrum];
+    const syllables = document.querySelectorAll('#metrum-display .syllable');
+    let correct = 0;
+
+    syllables.forEach((s, i) => {
+        const isStressed = s.classList.contains('stressed');
+        if (isStressed === !!data.stressed[i]) correct++;
+    });
+
+    const feedback = document.getElementById('metrum-feedback');
+    const pct = correct / syllables.length;
+
+    if (pct >= 0.8) {
+        feedback.className = 'explanation show correct-exp';
+        feedback.textContent = `✓ Super! Das ist ein ${data.metrum}. ${correct}/${syllables.length} Silben richtig.`;
+    } else {
+        feedback.className = 'explanation show wrong-exp';
+        feedback.textContent = `✗ Nicht ganz – das ist ein ${data.metrum}. ${correct}/${syllables.length} Silben richtig. Versuch es nochmal!`;
+    }
+
+    // Show correct pattern
+    syllables.forEach((s, i) => {
+        s.classList.remove('stressed', 'unstressed');
+        if (data.stressed[i]) s.classList.add('stressed');
+        else s.classList.add('unstressed');
+    });
+}
+
+function nextMetrum() {
+    currentMetrum = (currentMetrum + 1) % metrumData.length;
+    showMetrum();
+}
+
+// ============== QUIZ ==============
+const quizData = [
+    { q: 'Wie nennt man eine einzelne Zeile in einem Gedicht?', options: ['Strophe', 'Vers', 'Absatz', 'Refrain'], answer: 1, exp: 'Ein Vers ist eine einzelne Zeile. Mehrere Verse bilden eine Strophe.' },
+    { q: 'Was ist das „lyrische Ich"?', options: ['Der Autor des Gedichts', 'Die Hauptfigur einer Geschichte', 'Die sprechende Stimme im Gedicht', 'Der Leser des Gedichts'], answer: 2, exp: 'Das lyrische Ich ist die Stimme, die im Gedicht spricht – nicht automatisch der/die Autor:in!' },
+    { q: 'Welches Reimschema liegt vor: abab?', options: ['Paarreim', 'Kreuzreim', 'Umarmender Reim', 'Schweifreim'], answer: 1, exp: 'abab = Kreuzreim: Die Verse reimen sich über Kreuz (1↔3, 2↔4).' },
+    { q: '„Die Stadt schläft" – welches Stilmittel?', options: ['Vergleich', 'Metapher', 'Personifikation', 'Hyperbel'], answer: 2, exp: 'Die Stadt bekommt eine menschliche Eigenschaft (schlafen) → Personifikation.' },
+    { q: 'Was ist ein Jambus?', options: ['betont-unbetont (Xx)', 'unbetont-betont (xX)', 'betont-unbetont-unbetont (Xxx)', 'unbetont-unbetont-betont (xxX)'], answer: 1, exp: 'Jambus = unbetont-betont: da-DUM da-DUM (z.B. „Ge-DICHT").' },
+    { q: '„Stark wie ein Löwe" – welches Stilmittel?', options: ['Metapher', 'Vergleich', 'Personifikation', 'Symbol'], answer: 1, exp: 'Das Wort „wie" verbindet zwei Dinge → Vergleich. Eine Metapher würde sagen „Er ist ein Löwe".' },
+    { q: 'Was ist ein Enjambement?', options: ['Ein Reim am Versende', 'Ein Zeilensprung – der Satz geht über das Versende hinaus', 'Eine Strophe mit nur zwei Versen', 'Ein Gedicht ohne Reime'], answer: 1, exp: 'Enjambement = der Satz „springt" über das Versende in den nächsten Vers hinüber.' },
+    { q: 'Wie nennt man die Übertreibung als Stilmittel?', options: ['Euphemismus', 'Ironie', 'Hyperbel', 'Litotes'], answer: 2, exp: 'Hyperbel = starke Übertreibung (z.B. „Ich hab dir das tausendmal gesagt!").' },
+    { q: 'Was ist eine Kadenz?', options: ['Die Überschrift eines Gedichts', 'Das Versende (betont = männlich, unbetont = weiblich)', 'Ein musikalisches Element', 'Ein Reimschema'], answer: 1, exp: 'Kadenz = das Versende: männlich (betonte Silbe) oder weiblich (unbetonte Silbe).' },
+    { q: 'Welche Aussage über das lyrische Ich ist FALSCH?', options: ['Es kann „ich" sagen', 'Es ist immer der Autor selbst', 'Es kann Gefühle ausdrücken', 'Es hat eine bestimmte Perspektive'], answer: 1, exp: 'Das lyrische Ich ist NICHT automatisch der Autor – es ist eine literarische Figur/Stimme.' },
+];
+
+let quizCorrect = 0, quizAnswered = 0;
+
+function initQuiz() {
+    const container = document.getElementById('quiz-container');
+    container.innerHTML = '';
+    quizCorrect = 0;
+    quizAnswered = 0;
+    updateQuizScore();
+
+    quizData.forEach((q, i) => {
+        const div = document.createElement('div');
+        div.className = 'quiz-question';
+        div.innerHTML = `
+            <div class="q-number">Frage ${i + 1} von ${quizData.length}</div>
+            <h3>${q.q}</h3>
+            <div class="options">
+                ${q.options.map((o, j) => `<div class="option" onclick="checkQuizAnswer(this, ${j}, ${q.answer}, ${i})">${o}</div>`).join('')}
+            </div>
+            <div class="explanation" id="quiz-exp-${i}"></div>
+        `;
+        container.appendChild(div);
+    });
+}
+
+function checkQuizAnswer(el, selected, correct, index) {
+    const parent = el.closest('.quiz-question');
+    if (parent.classList.contains('answered')) return;
+    parent.classList.add('answered');
+    quizAnswered++;
+
+    const expEl = document.getElementById(`quiz-exp-${index}`);
+    parent.querySelectorAll('.option').forEach((o, j) => {
+        o.classList.add('disabled');
+        if (j === correct) o.classList.add('correct');
+    });
+
+    if (selected === correct) {
+        el.classList.add('correct');
+        quizCorrect++;
+        expEl.className = 'explanation show correct-exp';
+        expEl.textContent = '✓ Richtig! ' + quizData[index].exp;
+    } else {
+        el.classList.add('wrong');
+        expEl.className = 'explanation show wrong-exp';
+        expEl.textContent = '✗ Leider falsch. ' + quizData[index].exp;
+    }
+
+    updateQuizScore();
+}
+
+function updateQuizScore() {
+    document.getElementById('quiz-score').textContent = `${quizCorrect}/${quizData.length}`;
+    document.getElementById('quiz-progress').style.width = `${(quizCorrect/quizData.length)*100}%`;
+}
+
+function resetQuiz() { initQuiz(); }
+
+// ============== GEDICHT-CHAT ==============
+const chatData = {
+    erlkoenig: {
+        title: '🌙 Erlkönig – Nachtfahrt-Gruppe',
+        messages: [
+            { sender: '🐴 Vater', text: 'Halte dich fest, wir müssen durch den Wald. Gleich sind wir zu Hause.', side: 'left' },
+            { sender: '👦 Kind', text: 'Papa... da ist jemand. Im Nebel. Siehst du den?', side: 'right' },
+            { sender: '🐴 Vater', text: 'Das ist nur ein Nebelstreif, mein Sohn. Da ist niemand.', side: 'left' },
+            { sender: '👑 Erlkönig', text: 'Hey Kleiner 👋 Komm zu mir, wir haben so coole Spiele hier. Goldene Gewänder hab ich auch für dich ✨', side: 'left' },
+            { sender: '👦 Kind', text: 'PAPA ER REDET MIT MIR 😰 Hörst du das nicht?!', side: 'right' },
+            { sender: '🐴 Vater', text: 'Das ist nur der Wind in den Blättern. Beruhige dich.', side: 'left' },
+            { sender: '👑 Erlkönig', text: 'Meine Töchter wollen mit dir spielen 🌸 Die tanzen so schön... Komm einfach mit.', side: 'left' },
+            { sender: '👦 Kind', text: 'Da sind Gestalten!! Im Dunkeln!! Papa bitte schneller!! 😭😭', side: 'right' },
+            { sender: '🐴 Vater', text: 'Ich seh nur alte Weiden. Halt dich fest, wir reiten schneller.', side: 'left' },
+            { sender: '👑 Erlkönig', text: 'Okay wenn du nicht freiwillig kommst... Ich hol dich mir. 💀', side: 'left' },
+            { sender: '👦 Kind', text: 'ER FASST MICH AN PAPA HILFE!!! 😱', side: 'right' },
+            { sender: '🐴 Vater', text: 'Halt durch!! Wir sind gleich da!!', side: 'left' },
+            { sender: '📱 System', text: '🐴 Vater erreicht den Hof. Das Kind in seinen Armen... ist tot.', side: 'left' },
+        ],
+        reflection: 'In Goethes „Erlkönig" sprechen drei Stimmen: Vater, Kind und Erlkönig. Die Spannung entsteht durch den Konflikt: Das Kind nimmt etwas wahr, das der Vater nicht sieht. Im Chat-Format wird deutlich, wie verzweifelt das Kind ist – und wie hilflos der Vater. Was geht aber im Chat verloren? Denk an: Rhythmus, Reim, die galoppierende Geschwindigkeit des Gedichts...'
+    },
+    loreley: {
+        title: '🎵 Loreley – Rhine Cruise Chat',
+        messages: [
+            { sender: '⛵ Schiffer', text: 'Was für ein Abend... Der Rhein glitzert, die Sonne geht unter 🌅 Perfekte Fahrt.', side: 'left' },
+            { sender: '⛵ Schiffer', text: 'Moment, was ist das da oben auf dem Felsen? 👀', side: 'left' },
+            { sender: '💇‍♀️ Loreley', text: '*kämmt sich die goldenen Haare und singt* 🎵', side: 'right' },
+            { sender: '⛵ Schiffer', text: 'Wow... diese Stimme... Ich kann nicht wegsehen... 😍', side: 'left' },
+            { sender: '⚠️ Navigations-App', text: '🔴 WARNUNG: Felsen voraus! Kurs korrigieren!', side: 'left' },
+            { sender: '⛵ Schiffer', text: 'Ja gleich... nur noch kurz hinsehen...', side: 'left' },
+            { sender: '💇‍♀️ Loreley', text: '🎵✨', side: 'right' },
+            { sender: '⚠️ Navigations-App', text: '🔴🔴🔴 KOLLISIONSWARNUNG!! SOFORT AUSWEICHEN!!', side: 'left' },
+            { sender: '📱 System', text: '⛵ hat den Chat verlassen. (Verbindung verloren)', side: 'left' },
+        ],
+        reflection: 'Heines Loreley-Gedicht beschreibt die Macht der Verführung und des Nicht-Loslassen-Könnens. Im Chat wird die Ablenkung besonders deutlich – wie wenn man am Handy hängt, obwohl man aufpassen sollte. Welche Parallele zur heutigen Welt seht ihr?'
+    },
+    ribbeck: {
+        title: '🍐 Herr von Ribbeck – Dorfgruppe',
+        messages: [
+            { sender: '🍐 Herr von Ribbeck', text: 'Kinder!! Kommt her!! Birnen sind reif!! 🍐🍐🍐', side: 'left' },
+            { sender: '👧 Lütt Dirn', text: 'Jaaaa Herr von Ribbeck!! Wir kommen!! 🏃‍♀️', side: 'right' },
+            { sender: '👦 Jansen-Bengel', text: 'Geil, die besten Birnen im ganzen Land 😋', side: 'right' },
+            { sender: '🍐 Herr von Ribbeck', text: 'Hier, nehmt! Für jeden eine! Und die da steckt euch in die Tasche für den Heimweg 😊', side: 'left' },
+            { sender: '📱 System', text: '⚫ Herr von Ribbeck ist verstorben.', side: 'left' },
+            { sender: '💰 Ribbeck Junior', text: 'So Leute, der Birnbaum gehört jetzt MIR. Und ihr bleibt da weg!! 😤🚫', side: 'left' },
+            { sender: '👧 Lütt Dirn', text: '😢 Keine Birnen mehr...', side: 'right' },
+            { sender: '📱 System', text: '🌱 3 Jahre später: Auf dem Grab des alten Ribbeck wächst ein Birnbaum...', side: 'left' },
+            { sender: '🍐 Birnbaum am Grab', text: '*wirft Birnen über die Mauer* 🍐🍐', side: 'left' },
+            { sender: '👧 Lütt Dirn', text: 'OMG der alte Ribbeck hat einen Kern ins Grab legen lassen!! 🥺❤️ Legend!', side: 'right' },
+        ],
+        reflection: 'Fontanes Gedicht erzählt eine Geschichte über Großzügigkeit, die über den Tod hinaus wirkt. Im Chat-Format entsteht fast eine kleine Social-Media-Story. Was macht Fontanes Version aber besonders? Denk an den Rhythmus, den plattdeutschen Dialekt und die Atmosphäre...'
+    }
+};
+
+let chatIndex = 0, chatTimer = null;
+
+function startChat(gedicht) {
+    const data = chatData[gedicht];
+    document.getElementById('chat-box').style.display = 'block';
+    document.getElementById('chat-title').textContent = data.title;
+    document.getElementById('chat-messages').innerHTML = '';
+    document.getElementById('chat-reflection').style.display = 'none';
+    chatIndex = 0;
+
+    if (chatTimer) clearInterval(chatTimer);
+    chatTimer = setInterval(() => {
+        if (chatIndex >= data.messages.length) {
+            clearInterval(chatTimer);
+            document.getElementById('chat-reflection').style.display = 'block';
+            document.getElementById('chat-reflection-text').textContent = data.reflection;
+            return;
+        }
+        const msg = data.messages[chatIndex];
+        const div = document.createElement('div');
+        div.className = `chat-msg ${msg.side}`;
+        div.innerHTML = `<div class="sender">${msg.sender}</div>${msg.text}`;
+        document.getElementById('chat-messages').appendChild(div);
+        document.getElementById('chat-messages').scrollTop = 99999;
+        chatIndex++;
+    }, 1500);
+}
+
+// ============== INIT ==============
+document.addEventListener('DOMContentLoaded', () => {
+    initStilmittel();
+    initQuiz();
+    initMetrum();
+});
+</script>
+
+</body>
+</html>
