@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wilhelm-Tell-Werkstatt – Klasse 8a</title>
+    <style>
+        :root {
+            --primary: #c0392b;
+            --primary-light: #e74c3c;
+            --accent: #f39c12;
+            --accent-light: #f1c40f;
+            --bg: #0d0d0d;
+            --card: #1a1a1a;
+            --card-hover: #222;
+            --text: #f0f0f0;
+            --text-muted: #999;
+            --success: #27ae60;
+            --error: #e74c3c;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Segoe UI',-apple-system,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+
+        .app-header {
+            background: linear-gradient(135deg, #1a1a2e, var(--primary));
+            padding:2rem; text-align:center; position:relative; overflow:hidden;
+            border-bottom: 3px solid var(--accent);
+        }
+        .app-header h1 { font-size:2rem; font-weight:800; }
+        .app-header p { opacity:0.85; font-size:1rem; margin-top:0.3rem; }
+
+        nav {
+            display:flex; justify-content:center; gap:0.5rem; padding:1rem; flex-wrap:wrap;
+            background:var(--card); border-bottom:1px solid rgba(255,255,255,0.05);
+            position:sticky; top:0; z-index:100;
+        }
+        nav button {
+            background:transparent; color:var(--text-muted); border:1px solid rgba(255,255,255,0.1);
+            padding:0.6rem 1.1rem; border-radius:2rem; cursor:pointer; font-size:0.85rem; transition:all 0.3s;
+        }
+        nav button:hover, nav button.active { background:var(--primary); color:white; border-color:var(--primary); }
+
+        .section { display:none; padding:1.5rem; max-width:850px; margin:0 auto; }
+        .section.active { display:block; }
+
+        .card {
+            background:var(--card); border-radius:1rem; padding:1.5rem; margin-bottom:1.5rem;
+            border:1px solid rgba(255,255,255,0.05);
+        }
+        .card h2 { color:var(--accent); margin-bottom:0.5rem; font-size:1.3rem; }
+        .card h3 { color:var(--primary-light); margin:1rem 0 0.5rem; font-size:1.1rem; }
+        .card p, .card li { line-height:1.7; color:var(--text-muted); }
+        .card ul { padding-left:1.5rem; }
+        .card li { margin-bottom:0.3rem; }
+
+        .quote-box {
+            background:rgba(192,57,43,0.1); border-left:3px solid var(--primary);
+            padding:1rem; margin:0.8rem 0; border-radius:0 0.5rem 0.5rem 0;
+            font-style:italic; color:var(--text);
+        }
+        .quote-box .source { font-style:normal; font-size:0.8rem; color:var(--text-muted); margin-top:0.5rem; }
+
+        .tag { display:inline-block; background:rgba(243,156,18,0.15); color:var(--accent); padding:0.2rem 0.6rem; border-radius:1rem; font-size:0.8rem; margin:0.2rem; }
+        .tag-red { background:rgba(192,57,43,0.15); color:var(--primary-light); }
+
+        /* Figuren-Karten */
+        .figur-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:1rem; }
+        .figur-card {
+            background:var(--card); border:1px solid rgba(255,255,255,0.08); border-radius:1rem;
+            padding:1.2rem; text-align:center; transition:transform 0.2s; cursor:pointer;
+        }
+        .figur-card:hover { transform:translateY(-3px); border-color:var(--accent); }
+        .figur-card .avatar { font-size:3rem; margin-bottom:0.5rem; }
+        .figur-card h4 { color:var(--text); margin-bottom:0.3rem; }
+        .figur-card p { font-size:0.85rem; color:var(--text-muted); }
+        .figur-detail { display:none; margin-top:1rem; text-align:left; border-top:1px solid rgba(255,255,255,0.05); padding-top:1rem; }
+        .figur-card.expanded .figur-detail { display:block; }
+
+        /* Pyramide */
+        .pyramide { position:relative; margin:2rem auto; max-width:600px; }
+        .pyramide-step {
+            background:var(--card); border:2px solid rgba(255,255,255,0.08); border-radius:0.8rem;
+            padding:1rem; margin:0.5rem auto; text-align:center; cursor:pointer; transition:all 0.3s;
+        }
+        .pyramide-step:hover { border-color:var(--accent); }
+        .pyramide-step.active-step { border-color:var(--primary); background:rgba(192,57,43,0.1); }
+        .pyramide-step h4 { color:var(--accent); font-size:0.95rem; }
+        .pyramide-step p { font-size:0.85rem; color:var(--text-muted); margin-top:0.3rem; }
+        .pyramide-detail { display:none; font-size:0.85rem; margin-top:0.5rem; color:var(--text); padding-top:0.5rem; border-top:1px solid rgba(255,255,255,0.05); }
+        .pyramide-step.active-step .pyramide-detail { display:block; }
+
+        /* Quiz */
+        .quiz-question { background:var(--card); border-radius:1rem; padding:1.5rem; margin-bottom:1rem; border:1px solid rgba(255,255,255,0.05); }
+        .quiz-question h3 { color:var(--text); margin-bottom:1rem; font-size:1.05rem; }
+        .quiz-question .q-number { color:var(--accent); font-size:0.85rem; margin-bottom:0.3rem; }
+        .options { display:flex; flex-direction:column; gap:0.5rem; }
+        .option {
+            background:rgba(255,255,255,0.03); border:2px solid rgba(255,255,255,0.08);
+            border-radius:0.8rem; padding:0.9rem 1.2rem; cursor:pointer; transition:all 0.3s; font-size:0.95rem;
+        }
+        .option:hover { border-color:var(--primary); background:rgba(192,57,43,0.1); }
+        .option.correct { border-color:var(--success); background:rgba(39,174,96,0.15); }
+        .option.wrong { border-color:var(--error); background:rgba(231,76,60,0.15); }
+        .option.disabled { pointer-events:none; }
+        .explanation { display:none; margin-top:0.8rem; padding:0.8rem; border-radius:0.5rem; font-size:0.9rem; line-height:1.5; }
+        .explanation.show { display:block; }
+        .explanation.correct-exp { background:rgba(39,174,96,0.1); color:var(--success); }
+        .explanation.wrong-exp { background:rgba(231,76,60,0.1); color:var(--error); }
+
+        .score-bar {
+            background:var(--card); border-radius:1rem; padding:1.5rem; margin-bottom:1.5rem;
+            text-align:center; border:1px solid rgba(255,255,255,0.05);
+        }
+        .score-bar .score-number { font-size:2.5rem; font-weight:800; color:var(--accent); }
+        .progress-bar { height:8px; background:rgba(255,255,255,0.05); border-radius:4px; margin-top:0.8rem; overflow:hidden; }
+        .progress-fill { height:100%; background:linear-gradient(90deg,var(--primary),var(--accent)); border-radius:4px; transition:width 0.5s ease; }
+
+        /* Szenen-Navigator */
+        .timeline { position:relative; padding-left:2rem; }
+        .timeline::before { content:''; position:absolute; left:0.6rem; top:0; bottom:0; width:2px; background:rgba(255,255,255,0.08); }
+        .timeline-item {
+            position:relative; margin-bottom:1.5rem; padding-left:1.5rem; cursor:pointer;
+        }
+        .timeline-item::before {
+            content:''; position:absolute; left:-1.55rem; top:0.3rem; width:12px; height:12px;
+            border-radius:50%; background:var(--primary); border:2px solid var(--bg);
+        }
+        .timeline-item.highlight::before { background:var(--accent); box-shadow:0 0 10px var(--accent); }
+        .timeline-item h4 { color:var(--text); font-size:0.95rem; }
+        .timeline-item .scene-summary { font-size:0.85rem; color:var(--text-muted); margin-top:0.3rem; }
+        .timeline-item .scene-detail { display:none; margin-top:0.5rem; font-size:0.85rem; color:var(--text); }
+        .timeline-item.open .scene-detail { display:block; }
+
+        .btn {
+            background:linear-gradient(135deg,var(--primary),#e74c3c); color:white; border:none;
+            padding:0.8rem 2rem; border-radius:2rem; cursor:pointer; font-size:1rem; font-weight:600;
+            transition:all 0.3s; display:inline-block; margin-top:1rem;
+        }
+        .btn:hover { transform:translateY(-2px); box-shadow:0 5px 20px rgba(192,57,43,0.4); }
+
+        @media (max-width:600px) {
+            .app-header h1 { font-size:1.4rem; }
+            nav button { padding:0.4rem 0.7rem; font-size:0.8rem; }
+            .section { padding:1rem; }
+            .figur-grid { grid-template-columns:1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-header">
+    <h1>Wilhelm-Tell-Werkstatt 🏹</h1>
+    <p>Friedrich Schiller – Drama, Freiheit, Widerstand – Klasse 8a</p>
+</div>
+
+<nav>
+    <button class="active" onclick="showSection('home')">🏠 Start</button>
+    <button onclick="showSection('figuren')">👥 Figuren</button>
+    <button onclick="showSection('begriffe')">📖 Drama-Begriffe</button>
+    <button onclick="showSection('pyramide')">📐 Aufbau</button>
+    <button onclick="showSection('szenen')">🗺️ Szenen</button>
+    <button onclick="showSection('quiz')">🎯 Quiz</button>
+</nav>
+
+<!-- HOME -->
+<div class="section active" id="home">
+    <div class="card">
+        <h2>Willkommen! 🏔️</h2>
+        <p>Diese Web-App begleitet dich durch Schillers „Wilhelm Tell". Hier findest du alles, was du zum Lernen und Wiederholen brauchst.</p>
+        <h3>Bereiche</h3>
+        <ul>
+            <li><strong>👥 Figuren</strong> – Alle wichtigen Charaktere im Überblick</li>
+            <li><strong>📖 Drama-Begriffe</strong> – Fachbegriffe für die Dramenanalyse</li>
+            <li><strong>📐 Aufbau</strong> – Die Freytag-Pyramide und Wilhelm Tell</li>
+            <li><strong>🗺️ Szenen</strong> – Navigator durch alle 5 Akte</li>
+            <li><strong>🎯 Quiz</strong> – Teste dein Wissen</li>
+        </ul>
+    </div>
+    <div class="card">
+        <h2>Worum geht's? 🎭</h2>
+        <p>Schweiz, um 1300: Die Habsburger Vögte unterdrücken das Volk. Drei Kantone schwören auf dem Rütli, sich zu befreien. Gleichzeitig wird der Jäger Wilhelm Tell von Landvogt Gessler gezwungen, einen Apfel vom Kopf seines Sohnes zu schießen. Die Frage, die das ganze Stück durchzieht:</p>
+        <div class="quote-box">
+            Wann ist Widerstand gegen Unterdrückung gerechtfertigt – und wie weit darf er gehen?
+        </div>
+    </div>
+</div>
+
+<!-- FIGUREN -->
+<div class="section" id="figuren">
+    <div class="card">
+        <h2>👥 Figurenlexikon</h2>
+        <p>Klicke auf eine Figur, um mehr zu erfahren.</p>
+    </div>
+    <div class="figur-grid">
+        <div class="figur-card" onclick="this.classList.toggle('expanded')">
+            <div class="avatar">🏹</div>
+            <h4>Wilhelm Tell</h4>
+            <p>Jäger aus Uri</p>
+            <span class="tag">Protagonist</span>
+            <div class="figur-detail">
+                <p><strong>Rolle:</strong> Einzelgänger, Held wider Willen. Tell handelt instinktiv und direkt – er rettet Baumgarten, er schießt den Apfel, er tötet Gessler.</p>
+                <p><strong>Besonderheit:</strong> Er ist NICHT beim Rütli-Schwur dabei. Tell ist kein politischer Mensch – er handelt aus persönlicher Not.</p>
+                <p><strong>Kernkonflikt:</strong> Individuelles Handeln vs. kollektiver Widerstand. Familie vs. politische Pflicht.</p>
+            </div>
+        </div>
+        <div class="figur-card" onclick="this.classList.toggle('expanded')">
+            <div class="avatar">👿</div>
+            <h4>Gessler</h4>
+            <p>Reichsvogt in Uri und Schwyz</p>
+            <span class="tag-red tag">Antagonist</span>
+            <div class="figur-detail">
+                <p><strong>Rolle:</strong> Verkörperung der Tyrannei. Lässt den Hut auf die Stange setzen, zwingt Tell zum Apfelschuss.</p>
+                <p><strong>Motivation:</strong> Macht, Kontrolle, Demütigung der Schweizer.</p>
+                <p><strong>Ende:</strong> Wird von Tell in der Hohlen Gasse mit der Armbrust erschossen.</p>
+            </div>
+        </div>
+        <div class="figur-card" onclick="this.classList.toggle('expanded')">
+            <div class="avatar">👩</div>
+            <h4>Hedwig</h4>
+            <p>Tells Frau</p>
+            <span class="tag">Mahnerin</span>
+            <div class="figur-detail">
+                <p><strong>Rolle:</strong> Die Stimme der Vernunft und der Angst. Warnt Tell vor Gessler, sorgt sich um die Familie.</p>
+                <p><strong>Funktion:</strong> Zeigt die persönlichen Kosten des Widerstands. Hedwig stellt die Frage: Was nützt Freiheit, wenn die Familie zerbricht?</p>
+            </div>
+        </div>
+        <div class="figur-card" onclick="this.classList.toggle('expanded')">
+            <div class="avatar">👦</div>
+            <h4>Walter</h4>
+            <p>Tells Sohn</p>
+            <span class="tag">Schlüsselfigur</span>
+            <div class="figur-detail">
+                <p><strong>Rolle:</strong> Der Apfel liegt auf SEINEM Kopf. Walter zeigt erstaunlichen Mut und Vertrauen in seinen Vater.</p>
+                <p><strong>Funktion:</strong> Macht die Apfelschuss-Szene so unerträglich spannend – ein Kind als Opfer der Tyrannei.</p>
+            </div>
+        </div>
+        <div class="figur-card" onclick="this.classList.toggle('expanded')">
+            <div class="avatar">🤝</div>
+            <h4>Stauffacher</h4>
+            <p>Landmann aus Schwyz</p>
+            <span class="tag">Verschwörer</span>
+            <div class="figur-detail">
+                <p><strong>Rolle:</strong> Organisator des Rütli-Schwurs. Stauffacher denkt politisch und kollektiv – das Gegenteil von Tell.</p>
+                <p><strong>Motivation:</strong> Seine Frau Gertrud ermutigt ihn zum Handeln, als Gessler sein Haus bedroht.</p>
+            </div>
+        </div>
+        <div class="figur-card" onclick="this.classList.toggle('expanded')">
+            <div class="avatar">👴</div>
+            <h4>Attinghausen</h4>
+            <p>Freiherr, Rudenz' Onkel</p>
+            <span class="tag">Tradition</span>
+            <div class="figur-detail">
+                <p><strong>Rolle:</strong> Verkörpert die alte Schweizer Freiheit. Sterbend prophezeit er die Befreiung.</p>
+                <p><strong>Kernspruch:</strong> Warnt den Adel davor, sich an Habsburg zu verkaufen.</p>
+            </div>
+        </div>
+        <div class="figur-card" onclick="this.classList.toggle('expanded')">
+            <div class="avatar">🎭</div>
+            <h4>Rudenz</h4>
+            <p>Adliger, Attinghausens Neffe</p>
+            <span class="tag">Wandlung</span>
+            <div class="figur-detail">
+                <p><strong>Rolle:</strong> Beginnt als Habsburg-Sympathisant, wandelt sich zum Freiheitskämpfer. Seine Liebe zu Bertha ist der Katalysator.</p>
+                <p><strong>Funktion:</strong> Zeigt, dass Wandlung möglich ist – auch wer auf der falschen Seite steht, kann umkehren.</p>
+            </div>
+        </div>
+        <div class="figur-card" onclick="this.classList.toggle('expanded')">
+            <div class="avatar">⚔️</div>
+            <h4>Parricida</h4>
+            <p>Johann von Schwaben</p>
+            <span class="tag-red tag">Kontrastfigur</span>
+            <div class="figur-detail">
+                <p><strong>Rolle:</strong> Hat seinen Onkel, König Albrecht, ermordet. Sucht bei Tell Zuflucht, wird aber abgewiesen.</p>
+                <p><strong>Funktion:</strong> Kontrastfigur zu Tell! Beide haben getötet – aber aus völlig verschiedenen Motiven. Tell: Notwehr gegen Tyrannen. Parricida: Erbstreit, persönliche Rache.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- DRAMA-BEGRIFFE -->
+<div class="section" id="begriffe">
+    <div class="card">
+        <h2>📖 Drama-Begriffe</h2>
+        <p>Diese Fachbegriffe brauchst du für die Dramenanalyse:</p>
+    </div>
+    <div class="card">
+        <h3>Aufbau</h3>
+        <p><strong>Akt (Aufzug)</strong> – Großer Abschnitt eines Dramas. Wilhelm Tell hat <span class="tag">5 Akte</span>.</p>
+        <p><strong>Szene (Auftritt)</strong> – Unterabschnitt innerhalb eines Akts. Neue Szene = neue Figur tritt auf/ab.</p>
+        <p><strong>Regieanweisung</strong> – Anweisungen des Autors für die Inszenierung (kursiv gedruckt). Beschreibt Ort, Handlung, Mimik, Gestik.</p>
+        <div class="quote-box">
+            <em>Ein Felsenufer des Vierwaldstättersees, Schwyz gegenüber. Der See macht eine Bucht ins Land...</em>
+            <div class="source">— Regieanweisung, Beginn I,1</div>
+        </div>
+    </div>
+    <div class="card">
+        <h3>Gesprächsformen</h3>
+        <p><strong>Dialog</strong> – Gespräch zwischen zwei oder mehr Figuren. Die häufigste Form im Drama.</p>
+        <p><strong>Monolog</strong> – Eine Figur spricht allein (zum Publikum oder zu sich selbst). Zeigt Gedanken und innere Konflikte.</p>
+        <div class="quote-box">
+            Tells Monolog in der Hohlen Gasse (IV,3) ist der berühmteste Monolog des Stücks – Tell ringt mit sich, bevor er Gessler erschießt.
+        </div>
+        <p><strong>Stichomythie</strong> – Schneller Wortwechsel, bei dem sich die Figuren Zeile um Zeile abwechseln. Erzeugt Spannung und Tempo.</p>
+        <p><strong>Botenbericht</strong> – Eine Figur berichtet über Ereignisse, die nicht auf der Bühne gezeigt werden.</p>
+    </div>
+    <div class="card">
+        <h3>Dramenstruktur (Freytag-Pyramide)</h3>
+        <p><strong>Exposition</strong> – Einführung: Ort, Zeit, Figuren, Ausgangssituation.</p>
+        <p><strong>Steigende Handlung</strong> – Konflikt verschärft sich, Spannung steigt.</p>
+        <p><strong>Höhepunkt / Peripetie</strong> – Der dramatische Wendepunkt, an dem sich alles entscheidet.</p>
+        <p><strong>Fallende Handlung / Retardation</strong> – Verzögerung der Lösung, letzte Spannung.</p>
+        <p><strong>Katastrophe / Lösung</strong> – Das Ende: Im klassischen Drama tragisch (Katastrophe) oder glücklich (Lösung).</p>
+    </div>
+    <div class="card">
+        <h3>Analyse-Begriffe</h3>
+        <p><strong>Figurenkonstellation</strong> – Die Beziehungen zwischen den Figuren (Verbündete, Gegner, Liebespaare...).</p>
+        <p><strong>Figurencharakterisierung</strong> – Wie wird eine Figur dargestellt? Direkt (durch Aussagen anderer) oder indirekt (durch Handlungen, Sprache).</p>
+        <p><strong>Kontrastfigur</strong> – Eine Figur, die eine andere Figur durch Gegensätzlichkeit hervorhebt (z.B. Tell ↔ Parricida).</p>
+        <p><strong>Motiv</strong> – Wiederkehrendes Thema (z.B. Freiheit, Natur, Gerechtigkeit).</p>
+    </div>
+</div>
+
+<!-- PYRAMIDE -->
+<div class="section" id="pyramide">
+    <div class="card">
+        <h2>📐 Freytag-Pyramide – Wilhelm Tell</h2>
+        <p>Klicke auf die Stufen, um zu sehen, welche Szenen dort hingehören.</p>
+    </div>
+    <div class="pyramide">
+        <div class="pyramide-step" style="width:50%;margin-left:25%;" onclick="togglePyramide(this)">
+            <h4>⬆️ III. Höhepunkt / Peripetie</h4>
+            <p>Akt III – Der Apfelschuss</p>
+            <div class="pyramide-detail">
+                <strong>Szene III,3:</strong> Gessler zwingt Tell, auf den Apfel auf dem Kopf seines Sohnes zu schießen. Tell trifft – aber er hat einen zweiten Pfeil bereit. Das ist der Moment, in dem alles kippt: Tell wird vom Untertan zum potenziellen Tyrannenmörder.
+            </div>
+        </div>
+        <div style="display:flex;gap:1rem;">
+            <div class="pyramide-step" style="flex:1;" onclick="togglePyramide(this)">
+                <h4>↗️ II. Steigende Handlung</h4>
+                <p>Akt II – Rütli-Schwur</p>
+                <div class="pyramide-detail">
+                    <strong>Szene II,2:</strong> Die Vertreter der drei Kantone schwören auf dem Rütli, sich gegen die Habsburger zu erheben. Die Spannung steigt, weil der Konflikt nun organisiert wird. Parallel verschärft Gessler die Unterdrückung (Hut auf der Stange).
+                </div>
+            </div>
+            <div class="pyramide-step" style="flex:1;" onclick="togglePyramide(this)">
+                <h4>↘️ IV. Fallende Handlung</h4>
+                <p>Akt IV – Tells Flucht und Entschluss</p>
+                <div class="pyramide-detail">
+                    <strong>Szene IV,1–3:</strong> Tell wird gefangen transportiert, springt vom Boot, flieht. In der Hohlen Gasse wartet er auf Gessler. Sein Monolog zeigt den inneren Kampf – dann fällt der Schuss. Die Handlung bewegt sich unaufhaltsam zum Ende.
+                </div>
+            </div>
+        </div>
+        <div style="display:flex;gap:1rem;">
+            <div class="pyramide-step" style="flex:1;" onclick="togglePyramide(this)">
+                <h4>📖 I. Exposition</h4>
+                <p>Akt I – Die Ausgangslage</p>
+                <div class="pyramide-detail">
+                    <strong>Szenen I,1–4:</strong> Wir lernen die Schweizer Landschaft, die Unterdrückung durch die Vögte und den Helden Tell kennen. Tell rettet Baumgarten über den See – erste Heldentat. Gesslers Willkür wird sichtbar: Hut auf der Stange, den alle grüßen müssen.
+                </div>
+            </div>
+            <div class="pyramide-step" style="flex:1;" onclick="togglePyramide(this)">
+                <h4>✅ V. Lösung</h4>
+                <p>Akt V – Befreiung</p>
+                <div class="pyramide-detail">
+                    <strong>Szenen V,1–3:</strong> Gessler ist tot, die Burgen der Vögte werden gestürmt. Rudenz und Bertha finden zusammen. Parricida sucht Tell auf – Tell weist ihn ab und unterscheidet seinen Tyrannenmord vom Meuchelmord. Happy End: Die Schweiz ist frei.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SZENEN-NAVIGATOR -->
+<div class="section" id="szenen">
+    <div class="card">
+        <h2>🗺️ Szenen-Navigator</h2>
+        <p>Klicke auf eine Szene für Details. ⭐ = Schlüsselszene</p>
+    </div>
+
+    <div class="card">
+        <h3>Akt I – Exposition</h3>
+        <div class="timeline">
+            <div class="timeline-item highlight" onclick="this.classList.toggle('open')">
+                <h4>I,1 – Tells Rettungstat ⭐</h4>
+                <div class="scene-summary">Am Vierwaldstättersee. Fischer, Hirte, Jäger. Baumgarten flieht vor Soldaten – Tell fährt ihn über den stürmischen See.</div>
+                <div class="scene-detail">
+                    <p><strong>Ort:</strong> Ufer des Vierwaldstättersees</p>
+                    <p><strong>Figuren:</strong> Tell, Baumgarten, Fischer Ruodi, Hirte Kuoni</p>
+                    <p><strong>Bedeutung:</strong> Erste Charakterisierung Tells als Mann der Tat. Er handelt, wo andere zögern. Gleichzeitig wird die Unterdrückung durch die Vögte eingeführt (Baumgarten hat einen Vogt-Soldaten erschlagen, der seine Frau bedrängte).</p>
+                </div>
+            </div>
+            <div class="timeline-item" onclick="this.classList.toggle('open')">
+                <h4>I,2 – Stauffacher und Gertrud</h4>
+                <div class="scene-summary">Stauffacher berichtet seiner Frau von Gesslers Drohungen. Gertrud ermutigt ihn zum Widerstand.</div>
+                <div class="scene-detail">
+                    <p><strong>Bedeutung:</strong> Die politische Handlung beginnt. Gertrud ist die treibende Kraft – sie drängt Stauffacher, mit anderen Kantonen Kontakt aufzunehmen.</p>
+                </div>
+            </div>
+            <div class="timeline-item" onclick="this.classList.toggle('open')">
+                <h4>I,3 – Tells Familie / Hut auf der Stange</h4>
+                <div class="scene-summary">Tell mit seiner Familie. Der Hut auf der Stange als Symbol der Unterdrückung wird eingeführt.</div>
+                <div class="scene-detail">
+                    <p><strong>Bedeutung:</strong> Hedwig warnt Tell, sich nicht mit Gessler anzulegen. Der Hut-Befehl wird zum Auslöser des Konflikts.</p>
+                </div>
+            </div>
+            <div class="timeline-item" onclick="this.classList.toggle('open')">
+                <h4>I,4 – Attinghausen und Rudenz</h4>
+                <div class="scene-summary">Der alte Freiherr und sein Neffe streiten: Rudenz will zu den Habsburgern, Attinghausen mahnt zur Treue.</div>
+                <div class="scene-detail">
+                    <p><strong>Bedeutung:</strong> Der Adels-Handlungsstrang beginnt. Generationenkonflikt: alt (Freiheit) vs. jung (Anpassung an die Macht).</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>Akt II – Rütli-Schwur</h3>
+        <div class="timeline">
+            <div class="timeline-item" onclick="this.classList.toggle('open')">
+                <h4>II,1 – Vorbereitung</h4>
+                <div class="scene-summary">Die Verschwörer verabreden sich zum nächtlichen Treffen auf dem Rütli.</div>
+                <div class="scene-detail"><p><strong>Bedeutung:</strong> Aufbau der Spannung vor der entscheidenden Versammlung.</p></div>
+            </div>
+            <div class="timeline-item highlight" onclick="this.classList.toggle('open')">
+                <h4>II,2 – Der Rütli-Schwur ⭐</h4>
+                <div class="scene-summary">Nachts auf dem Rütli: Vertreter von Uri, Schwyz und Unterwalden schwören den gemeinsamen Aufstand.</div>
+                <div class="scene-detail">
+                    <p><strong>Bedeutung:</strong> DER kollektive Widerstandsakt. Organisiert, demokratisch, gewaltfrei geplant. Kontrast zu Tells individuellem Handeln. Tell selbst ist NICHT dabei!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>Akt III – Höhepunkt</h3>
+        <div class="timeline">
+            <div class="timeline-item" onclick="this.classList.toggle('open')">
+                <h4>III,1 – Tell und Walter unterwegs</h4>
+                <div class="scene-summary">Tell und sein Sohn Walter gehen nach Altdorf. Tell ignoriert den Hut auf der Stange.</div>
+                <div class="scene-detail"><p><strong>Bedeutung:</strong> Tell zeigt Zivilcourage, aber auch Naivität – er unterschätzt die Konsequenzen.</p></div>
+            </div>
+            <div class="timeline-item" onclick="this.classList.toggle('open')">
+                <h4>III,2 – Verhaftung</h4>
+                <div class="scene-summary">Tell wird wegen Nichtgrüßens des Huts verhaftet. Gessler kommt dazu.</div>
+                <div class="scene-detail"><p><strong>Bedeutung:</strong> Die Schlinge zieht sich zu. Gessler ersinnt die grausame Strafe.</p></div>
+            </div>
+            <div class="timeline-item highlight" onclick="this.classList.toggle('open')">
+                <h4>III,3 – Der Apfelschuss ⭐⭐</h4>
+                <div class="scene-summary">Tell muss den Apfel vom Kopf seines Sohnes schießen. Er trifft. Auf Gesslers Frage nach dem zweiten Pfeil: Er hätte Gessler damit erschossen.</div>
+                <div class="scene-detail">
+                    <p><strong>Bedeutung:</strong> DIE Schlüsselszene. Maximale Spannung, maximale Grausamkeit. Tells Geständnis über den zweiten Pfeil zeigt: Er ist innerlich bereits zum Tyrannenmord bereit. Gessler lässt Tell gefangen abführen.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>Akt IV – Wendepunkt</h3>
+        <div class="timeline">
+            <div class="timeline-item" onclick="this.classList.toggle('open')">
+                <h4>IV,1 – Am Seeufer / Tells Sprung</h4>
+                <div class="scene-summary">Tell wird über den See transportiert. Ein Sturm kommt auf, Tell springt vom Boot und flieht.</div>
+                <div class="scene-detail"><p><strong>Bedeutung:</strong> Die Natur hilft dem Freiheitskämpfer – typisches Motiv der Weimarer Klassik.</p></div>
+            </div>
+            <div class="timeline-item" onclick="this.classList.toggle('open')">
+                <h4>IV,2 – Attinghausens Tod</h4>
+                <div class="scene-summary">Der alte Freiherr stirbt. Rudenz wendet sich endgültig von Habsburg ab.</div>
+                <div class="scene-detail"><p><strong>Bedeutung:</strong> Rudenz' Wandlung ist abgeschlossen. Die alte und die neue Generation vereinen sich im Kampf um Freiheit.</p></div>
+            </div>
+            <div class="timeline-item highlight" onclick="this.classList.toggle('open')">
+                <h4>IV,3 – Die Hohle Gasse ⭐⭐</h4>
+                <div class="scene-summary">Tell wartet in der Hohlen Gasse auf Gessler. Großer Monolog. Er erschießt Gessler.</div>
+                <div class="scene-detail">
+                    <p><strong>Bedeutung:</strong> Tells wichtigster Monolog. Er rechtfertigt sein Handeln vor sich selbst – nicht aus Rache, sondern zum Schutz seiner Familie und des Volkes. Die Tat ist vollbracht: der Tyrann ist tot.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>Akt V – Lösung</h3>
+        <div class="timeline">
+            <div class="timeline-item" onclick="this.classList.toggle('open')">
+                <h4>V,1 – Die Befreiung</h4>
+                <div class="scene-summary">Die Burgen der Vögte werden gestürmt. Das Volk feiert. Rudenz befreit Bertha.</div>
+                <div class="scene-detail"><p><strong>Bedeutung:</strong> Der kollektive Aufstand der Rütli-Verschwörer und Tells individuelle Tat kommen zusammen – gemeinsam wird die Freiheit errungen.</p></div>
+            </div>
+            <div class="timeline-item highlight" onclick="this.classList.toggle('open')">
+                <h4>V,2 – Tell und Parricida ⭐</h4>
+                <div class="scene-summary">Johann von Schwaben (Parricida), der Kaiser Albrecht ermordet hat, sucht bei Tell Zuflucht. Tell weist ihn ab.</div>
+                <div class="scene-detail">
+                    <p><strong>Bedeutung:</strong> DIE Kontrastszene. Tell unterscheidet klar: „Ich hab mein Teuerstes verteidigt" – er tötete einen Tyrannen zum Schutz seiner Familie. Parricida tötete aus Habgier. Schiller macht damit klar: Nicht jedes Töten ist gleich.</p>
+                </div>
+            </div>
+            <div class="timeline-item" onclick="this.classList.toggle('open')">
+                <h4>V,3 – Happy End</h4>
+                <div class="scene-summary">Die Schweiz ist frei. Allgemeine Versöhnung und Feier.</div>
+                <div class="scene-detail"><p><strong>Bedeutung:</strong> Schiller wählt eine positive Lösung statt einer Katastrophe. Die Freiheit siegt – individuell UND kollektiv.</p></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- QUIZ -->
+<div class="section" id="quiz">
+    <div class="card">
+        <h2>🎯 Wilhelm-Tell-Quiz</h2>
+        <p>Teste dein Wissen! Wähle die richtige Antwort.</p>
+    </div>
+    <div class="score-bar">
+        <div class="score-number" id="quiz-score">0/12</div>
+        <p style="color:var(--text-muted);">richtige Antworten</p>
+        <div class="progress-bar"><div class="progress-fill" id="quiz-progress" style="width:0%"></div></div>
+    </div>
+    <div id="quiz-container"></div>
+    <div style="text-align:center;margin:2rem 0;">
+        <button class="btn" onclick="resetQuiz()">🔄 Quiz neu starten</button>
+    </div>
+</div>
+
+<script>
+function showSection(id) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    event.target.classList.add('active');
+    window.scrollTo(0,0);
+}
+
+function togglePyramide(el) {
+    document.querySelectorAll('.pyramide-step').forEach(s => { if(s!==el) s.classList.remove('active-step'); });
+    el.classList.toggle('active-step');
+}
+
+// QUIZ
+const quizData = [
+    {q:'Wie viele Akte hat „Wilhelm Tell"?', options:['3','4','5','7'], answer:2, exp:'Wilhelm Tell hat 5 Akte (Aufzüge) – typisch für das klassische Drama.'},
+    {q:'Warum muss Tell den Apfelschuss machen?', options:['Er hat Gessler beleidigt','Er hat den Hut auf der Stange nicht gegrüßt','Er hat Steuern nicht bezahlt','Er hat gegen Gessler gekämpft'], answer:1, exp:'Tell ignoriert Gesslers Befehl, den Hut auf der Stange zu grüßen – als Strafe muss er den Apfel vom Kopf seines Sohnes schießen.'},
+    {q:'Was ist der Rütli-Schwur?', options:['Tells Racheeid gegen Gessler','Ein Friedensvertrag mit den Habsburgern','Der gemeinsame Schwur der drei Kantone zum Widerstand','Ein religiöses Ritual'], answer:2, exp:'Auf dem Rütli schwören Vertreter von Uri, Schwyz und Unterwalden den gemeinsamen Aufstand gegen die Habsburger Vögte.'},
+    {q:'Warum ist Tell NICHT beim Rütli-Schwur dabei?', options:['Er wurde nicht eingeladen','Er ist ein Einzelgänger, kein politischer Mensch','Er war krank','Er war schon verhaftet'], answer:1, exp:'Tell ist ein Einzelgänger, der instinktiv handelt, aber kein politischer Organisator. Das ist sein zentrales Merkmal.'},
+    {q:'Was antwortet Tell auf die Frage nach dem zweiten Pfeil?', options:['Er lügt und sagt, es sei Zufall gewesen','Er schweigt','Er sagt, er hätte Gessler damit erschossen','Er sagt, der sei für die Jagd'], answer:2, exp:'Tell gesteht offen: Hätte er seinen Sohn getroffen, hätte er Gessler mit dem zweiten Pfeil erschossen.'},
+    {q:'Wo tötet Tell den Gessler?', options:['Auf dem Rütli','Am Vierwaldstättersee','In der Hohlen Gasse','In Altdorf'], answer:2, exp:'In der Hohlen Gasse (IV,3) lauert Tell Gessler auf und erschießt ihn mit der Armbrust.'},
+    {q:'Wer ist Parricida?', options:['Tells bester Freund','Ein Schweizer Bauer','Johann von Schwaben, der König Albrecht ermordet hat','Ein Habsburger Soldat'], answer:2, exp:'Johann von Schwaben (Parricida = Verwandtenmörder) hat seinen Onkel, Kaiser Albrecht, aus Erbgier ermordet und sucht bei Tell Zuflucht.'},
+    {q:'Warum weist Tell Parricida ab?', options:['Weil er Angst hat','Weil Parricida aus persönlicher Gier tötete, nicht aus Notwehr','Weil Parricida ein Ausländer ist','Weil Gessler es verboten hat'], answer:1, exp:'Tell unterscheidet: Er selbst tötete einen Tyrannen zum Schutz seiner Familie. Parricida tötete aus Habgier – das ist für Tell unverzeihlich.'},
+    {q:'Was ist eine Stichomythie?', options:['Ein langer Monolog','Ein schneller Wortwechsel Zeile um Zeile','Eine Regieanweisung','Ein Botenbericht'], answer:1, exp:'Stichomythie = schneller, zeilenweiser Wortwechsel zwischen Figuren. Erzeugt Spannung und Tempo.'},
+    {q:'Was bedeutet „Exposition" im Drama?', options:['Der Höhepunkt','Die Einführung in Ort, Zeit, Figuren und Konflikt','Das Ende','Ein Monolog'], answer:1, exp:'Die Exposition (meist 1. Akt) führt in die Ausgangssituation ein: Wer? Wo? Wann? Was ist das Problem?'},
+    {q:'Wer ermutigt Stauffacher zum Widerstand?', options:['Tell','Seine Frau Gertrud','Gessler','Attinghausen'], answer:1, exp:'Gertrud, Stauffachers Frau, drängt ihn zum Handeln und ermutigt ihn, Verbündete zu suchen.'},
+    {q:'Wie endet das Drama?', options:['Tell stirbt','Die Schweizer werden besiegt','Die Schweiz wird frei, allgemeine Versöhnung','Gessler gewinnt'], answer:2, exp:'Happy End: Gessler ist tot, die Vögte vertrieben, die Schweiz ist frei. Schiller wählt eine positive Lösung.'},
+];
+
+let quizCorrect=0, quizAnswered=0;
+function initQuiz() {
+    const c=document.getElementById('quiz-container'); c.innerHTML=''; quizCorrect=0; quizAnswered=0; updateScore();
+    quizData.forEach((q,i) => {
+        const d=document.createElement('div'); d.className='quiz-question';
+        d.innerHTML=`<div class="q-number">Frage ${i+1} von ${quizData.length}</div><h3>${q.q}</h3>
+            <div class="options">${q.options.map((o,j)=>`<div class="option" onclick="checkAnswer(this,${j},${q.answer},${i})">${o}</div>`).join('')}</div>
+            <div class="explanation" id="exp-${i}"></div>`;
+        c.appendChild(d);
+    });
+}
+function checkAnswer(el,sel,cor,idx) {
+    const p=el.closest('.quiz-question'); if(p.classList.contains('answered')) return;
+    p.classList.add('answered'); quizAnswered++;
+    const e=document.getElementById(`exp-${idx}`);
+    p.querySelectorAll('.option').forEach((o,j)=>{o.classList.add('disabled');if(j===cor)o.classList.add('correct');});
+    if(sel===cor){el.classList.add('correct');quizCorrect++;e.className='explanation show correct-exp';e.textContent='✓ Richtig! '+quizData[idx].exp;}
+    else{el.classList.add('wrong');e.className='explanation show wrong-exp';e.textContent='✗ '+quizData[idx].exp;}
+    updateScore();
+}
+function updateScore(){document.getElementById('quiz-score').textContent=`${quizCorrect}/${quizData.length}`;document.getElementById('quiz-progress').style.width=`${(quizCorrect/quizData.length)*100}%`;}
+function resetQuiz(){initQuiz();}
+document.addEventListener('DOMContentLoaded',initQuiz);
+</script>
+</body>
+</html>
